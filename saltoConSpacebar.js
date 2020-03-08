@@ -18,6 +18,8 @@ function preload() {
     game.load.image('playerDead', '/player.dead.png');
 
     //game.load.image('minioni', '/onichan.png');
+    game.load.spritesheet('oni', '/oni.png', 52, 72, 14);
+    game.load.spritesheet('mazza', '/mazza.png', 50, 72, 14);
 
     game.load.image('bullet', '/freccia.png');
 
@@ -38,15 +40,16 @@ function preload() {
 
     game.load.image('sbarra', '/sbarra.png');
     game.load.image('indicatore', '/momochantesta.png');
-
-    game.load.image('cane', '/nonna.png');
-    game.load.image('door', '/frecciaDx.png');
+    game.load.image('testadioni', '/onitesta.png');
 }
 
 var player;
 var playerDead;
 var minioni;
+var oni;
 var miniDead;
+var oniDead;
+var mazza;
 
 var cursors;
 var jumpButton;
@@ -65,6 +68,7 @@ var bullet;
 var text;
 var subtext;
 var victoryText;
+var oniHit;
 var instructions;
 var instruction2;
 
@@ -81,24 +85,21 @@ var sbarra;
 var indicatore;
 
 var playerCaduto;
-var cane;
-var canePreso;
-var door;
+var pugnooni = 0;
+
 
 function create() {
 go = 1;
 pGo = 0;
-canePreso = 0;
+oniHit = 0;
 minioniCreate = 0;
 //0 -> il player non è caduto, 1 -> il player è morto cadendo
 playerCaduto = 0;
   //sfondo
   sfondo = game.add.physicsGroup();
   var s;
-  var y;
-  for(s=0; s<3; s++) {
-     for(y=0; y<7; y++) sfondo.create(0+500*s, 0+652*y, 'sfondo');
-};
+  for(s=0; s<12; s++)
+  sfondo.create(0+500*s, 0, 'sfondo');
   sfondo.setAll('body.immovable', true);
 
 
@@ -116,12 +117,12 @@ playerCaduto = 0;
     fireButtonL = game.input.keyboard.addKey(Phaser.Keyboard.Z);
 
     //world bounds
-    game.world.setBounds(0,0,952,4000);
+    game.world.setBounds(0,0,6000,652);
 
     //minioni
       minioni = game.add.physicsGroup();
       var i;
-      for(i=0; i<0; i++)
+      for(i=0; i<30; i++)
           minioni.create(game.world.randomX + 500, game.world.randomY, 'minioni');
 
       minioni.forEach(function(item) {
@@ -139,36 +140,36 @@ playerCaduto = 0;
 
     //platforms
     block3 = game.add.physicsGroup();
-    block3.create(100, 3700, 'block3');
-    /*block3.create(600, 450, 'block3');
+    block3.create(100, 500, 'block3');
+    block3.create(600, 450, 'block3');
     block3.create(1050, 600, 'block3');
     block3.create(2100, 612, 'block3');
     block3.create(2500, 300, 'block3');
     block3.create(3180, 592, 'block3');
     block3.create(3800, 320, 'block3');
     block3.create(4850, 450, 'block3');
-    block3.create(5680, 500, 'block3');*/
+    block3.create(5680, 500, 'block3');
     block3.setAll('body.immovable', true);
 
     block1 = game.add.physicsGroup();
-    block1.create(500, 3500, 'block1');
-    block1.create(500, 3700, 'block1');
-    /*block1.create(2900, 200, 'block1');
+    block1.create(1000, 300, 'block1');
+    block1.create(1700, 300, 'block1');
+    block1.create(2900, 200, 'block1');
     block1.create(2880, 500, 'block1');
     block1.create(3700, 480, 'block1');
     block1.create(4630, 100, 'block1');
     block1.create(5300, 300, 'block1');
-    block1.create(5500, 150, 'block1');*/
+    block1.create(5500, 150, 'block1');
     block1.setAll('body.immovable', true);
 
     block2 = game.add.physicsGroup();
-    block2.create(750, 3600, 'block2');
-    /*block2.create(1770, 190, 'block2');
+    block2.create(1570, 460, 'block2');
+    block2.create(1770, 190, 'block2');
     block2.create(2245, 190, 'block2');
     block2.create(1860, 600, 'block2');
     block2.create(3180, 380, 'block2');
     block2.create(4350, 500, 'block2');
-    block2.create(5300, 600, 'block2');*/
+    block2.create(5300, 600, 'block2');
     block2.setAll('body.immovable', true);
 
    blocksp = game.add.physicsGroup();
@@ -178,19 +179,36 @@ playerCaduto = 0;
    blocksp.setAll('body.immovable', true);
    blocksp.alpha = 0.5;
 
-   //porta
-   door = game.add.sprite(880, 3560, 'door');
-   game.physics.arcade.enable(door);
-   door.body.immovable = true;
+    //oni grande
+    oni = game.add.sprite(5850, 428, 'oni');
+    game.physics.arcade.enable(oni);
+    oni.body.collideWorldBounds = true;
+    oni.body.immovable = true;
+    oni.body.velocity.x = -100;
+    oni.scale.setTo(1,1);
+    var walkOni = oni.animations.add('walkOni');
+    oni.animations.play('walkOni', 14, true);
 
-   //cane
-   cane = game.add.sprite(300, 150, 'cane');
-   game.physics.arcade.enable(cane);
-   cane.body.immovable = true;
+    mazza = game.add.sprite(-29, 0, 'mazza');
+    //mazza = game.add.sprite(-1000, 0, 'mazza');
+    game.physics.arcade.enable(mazza);
+    oni.addChild(mazza);
+
+
+  viteoni1 = game.add.sprite(700, 25, 'testadioni');
+  viteoni2 = game.add.sprite(760, 25, 'testadioni');
+  viteoni3 = game.add.sprite(820, 25, 'testadioni');
+  viteoni = game.add.group();
+  viteoni.add(viteoni1);
+    viteoni.add(viteoni2);
+    viteoni.add(viteoni3);
+    viteoni.forEach(function(item) {
+    item.fixedToCamera = true;
+  });
 
         //player
-        player = game.add.sprite(200, 3500, 'player');
-
+        player = game.add.sprite(200, 440, 'player');
+      //  player = game.add.sprite(5350, 100, 'player');
         game.camera.follow(player);
         game.physics.arcade.enable(player);
         player.body.collideWorldBounds = false;
@@ -204,6 +222,9 @@ playerCaduto = 0;
         indicatore = game.add.sprite(0, -23/4, 'indicatore');
         game.physics.arcade.enable(indicatore);
         sbarra.addChild(indicatore);
+
+        testaoni = game.add.sprite (290, 25-23/4 , 'testadioni');
+        testaoni.fixedToCamera = true;
 
           var frecciaDx;
           var frecciaSx;
@@ -237,32 +258,105 @@ function updateCounter() {
         game.input.onTap.addOnce(function () {
             game.paused = false;
             game.state.restart();
+            statoOni = 1;
+            oniCompari();
         });
 }
 
 //victory text and victory function
 function victory () {
-  if(canePreso == 1) {
-  game.paused = true;
-  console.log("hai vinto!!!");
+
          //restart on click function
         game.input.onTap.addOnce(function () {
           game.paused = false;
           game.state.restart();
+          if(statoOni == 3) {goRight();}
+          else {statoOni = 1; oniCompari();}
         });
-}
+
+        setTimeout(GiocosiFermaVictory, 1500);
+
 }
 
 function GiocosiFermaGameOver() {
   game.paused = true;
+  //mouseSparisceO();
+  statoOni = 2;
+  oniCompari();
+}
+
+function GiocosiFermaVictory() {
+  game.paused = true;
+  //mouseSparisceO();
+  statoOni = 3;
+  oniCompari();
 }
 
 function update () {
+  if(volteo == 0 || statoOni == 0) {
+    game.paused = true;
+    volteo = 1;
+  }
+  game.input.onTap.addOnce(function () {
+  if (volteo == 1) {
+    game.paused = false;
+    statoOni = 1;
+    oniCompari();
+
+//tutorial
+frecciaDx = game.add.sprite(60, -30, 'frecciaDx');
+game.physics.arcade.enable(frecciaDx);
+player.addChild(frecciaDx);
+frecciaDx.alpha = 0.5;
+game.add.tween(frecciaDx).to( { alpha: 0 }, 300, Phaser.Easing.Linear.None, true, 0, 1000, true);
+
+frecciaSx = game.add.sprite(-60-35, -30, 'frecciaSx');
+game.physics.arcade.enable(frecciaSx);
+player.addChild(frecciaSx);
+frecciaSx.alpha = 0;
+
+frecciaAl = game.add.sprite(17.5-23, -100, 'frecciaAl');
+game.physics.arcade.enable(frecciaAl);
+player.addChild(frecciaAl);
+frecciaAl.alpha = 0;
+
+spacebar = game.add.sprite(17.5-124/2, 60, 'spacebar');
+game.physics.arcade.enable(spacebar);
+player.addChild(spacebar);
+spacebar.alpha = 0;
+
+volteo = 2;
+}
+});
+
+if(cursors.right.isDown) {
+  frecciaDx.kill();
+  frecciaSx.alpha = 0.5;
+    game.add.tween(frecciaSx).to( { alpha: 0 }, 300, Phaser.Easing.Linear.None, true, 0, 1000, true);
+}
+
+if(cursors.left.isDown) {
+  frecciaSx.kill();
+  frecciaAl.alpha = 0.5;
+  game.add.tween(frecciaAl).to( { alpha: 0 }, 300, Phaser.Easing.Linear.None, true, 0, 1000, true);
+}
+
+if(fireButtonR.isDown) {
+  frecciaAl.kill();
+  spacebar.alpha = 0.5;
+    game.add.tween(spacebar).to( { alpha: 0 }, 300, Phaser.Easing.Linear.None, true, 0, 1000, true);
+}
+
+if(jumpButton.isDown) {
+  spacebar.kill();
+}
+
 
     game.physics.arcade.overlap(bullets, minioni, hitEnemy, null, this);
     game.physics.arcade.overlap(player, minioni, gameOver, null, this);
-    game.physics.arcade.overlap(player, door, victory, null, this);
-    game.physics.arcade.overlap(player, cane, function() {canePreso = 1; cane.x = player.x - 10; cane.y = player.y;}, null, this);
+
+    game.physics.arcade.overlap(player, oni, gameOver, null, this);
+    game.physics.arcade.overlap(bullets, oni, hitBoss, null, this);
 
     game.physics.arcade.overlap(bullets, block1, bulletBlock1, null, this);
     game.physics.arcade.overlap(bullets, block2, bulletBlock2, null, this);
@@ -272,14 +366,19 @@ function update () {
     game.physics.arcade.collide(player, block3);
     game.physics.arcade.collide(player, block1);
     game.physics.arcade.collide(player, block2);
-    game.physics.arcade.collide(player, door);
-    game.physics.arcade.collide(player, cane);
+    game.physics.arcade.collide(player, oni);
     game.physics.arcade.collide(minioni, player);
 
     game.physics.arcade.collide(minioni, minioni);
     game.physics.arcade.collide(minioni, block3);
     game.physics.arcade.collide(minioni, block1);
     game.physics.arcade.collide(minioni, block2);
+
+    game.physics.arcade.collide(bullets, oni);
+    game.physics.arcade.collide(block1, oni);
+    game.physics.arcade.collide(block2, oni);
+    game.physics.arcade.collide(block3, oni);
+
 
     game.physics.arcade.collide(bullets, block1);
     game.physics.arcade.collide(bullets, block2);
@@ -343,17 +442,59 @@ function update () {
     }
 
     //player dies if fallen
-    if (player.y > 4000)
+    if (player.y > 768)
     {
       playerCaduto = 1;
       updateCounter();
     }
+
+
+    //oni si muove
+    if (oni.x < 5700 && go == 1) {
+        oni.body.velocity.x = 100;
+        oni.scale.setTo(-1,1);
+        go = 2;
+        oni.x = 5670+52;
+
+    } else if (oni.x > 5986 && go == 2) {
+        oni.body.velocity.x = -100;
+        oni.scale.setTo(1,1);
+        oni.x = 5970 - 52;
+       go = 1;
+    }
+
+    //l'oni muove la mazza solo quando momotaro è vicino
+    if(Math.abs(oni.x-player.x) < 300) {
+      mazzaSiMuove();
+    } else {
+      mazza.animations.stop(null, true);
+      pugnooni = 0;
+    }
+
 }   // end of update function
+
+
+
+function mazzaSiMuove() {
+  if(pugnooni == 0) {console.log("vaiii");
+  var oniMazza = mazza.animations.add('oniMazza');
+  mazza.animations.play('oniMazza', 10, true);
+  pugnooni = 1
+}
+}
+function oniWalksRight () {
+    oni.body.velocity.x = 500;
+}
+
+function oniWalksLeft() {
+    oni.body.velocity.x = -500;
+}
 
    //player's body hits minioni
    function gameOver (player,minioni) {
+      if(oniHit < 3) {
         updateCounter();
-    }
+    } }
 
     //player fires right
     function fireBulletR () {
@@ -422,11 +563,59 @@ function hitEnemy (minioni, bullet) {
 
 }
 
-function render () {
+//oni killed if hit 3 times
+function hitBoss (oni, bullet) {
+    updateHit();
+    bullet.kill();
+    if (oniHit == 1) {viteoni1.kill();}
+    else if( oniHit == 2) {viteoni2.kill();}
+    else if (oniHit == 3) {viteoni3.kill();}
 
+    if (oniHit == 3)
+    {
+        minioni.forEach(function(item) {
+          miniDead = game.add.physicsGroup();
+          miniDead.create(item.x, item.y, 'miniDead');
+          miniDead.forEach(function(item){
+                item.body.gravity.y = 500;
+            })
+        });
+minioni.kill();
+   oni.kill();
+   oniDead = game.add.sprite(oni.x, oni.y, 'oni');
+   if(go == 2) {
+    oniDead.scale.setTo(-1,1);
+     oniDead.anchor.setTo(0, 1);
+   oniDead.y = oniDead.y + 72;
 
+   //oniDead.anchor.setTo(0, 1);
+   game.add.tween(oniDead).to( { y: oniDead.y + 10}, 1000, Phaser.Easing.Linear.None, true);
+   game.add.tween(oniDead).to( { angle: 90 }, 1000, Phaser.Easing.Linear.None, true);
+   //oniDead.y = oniDead.y -28;
+   setTimeout(victory, 1000);}
+   else if (go == 1) {
+
+     oniDead.anchor.setTo(0, 1);
+     oniDead.y = oniDead.y + 72;
+     //oniDead.x = oniDead.x - 28;
+     game.add.tween(oniDead).to( { y: oniDead.y  -40}, 1000, Phaser.Easing.Linear.None, true);
+     game.add.tween(oniDead).to( { angle: 90 }, 1000, Phaser.Easing.Linear.None, true);
+     setTimeout(victory, 1000);
+   }
+    }
 }
+// update number of times oni is hit
+    function updateHit () {
+        oniHit = oniHit + 1;
 
+    }
+
+
+function render () {
+/*if (oniHit == 3) {
+  oniDead.angle += 1;
+}*/
+}
 }
 
 giocoOniFinale();
