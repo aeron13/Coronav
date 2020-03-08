@@ -1,0 +1,29 @@
+body {
+overflow: hidden;
+background-image: url("./pattern10.jpg");
+ }
+
+@font-face {
+    font-family: yozakura;
+    src: url(./fonts/YOZAKURA-Regular.otf);
+}
+
+@font-face {
+    font-family: nanami-bold;
+    src: url(./fonts/Nanami-Book.otf);
+}
+
+@font-face {
+    font-family: nanami;
+    src: url(./fonts/Nanami-Light.otf);
+}
+
+#wrapper {
+  position: absolute;
+  background-image: url("./images/parchment2.jpg");
+  width: 1000px;
+  height: 700px;
+  top: 50%;
+  left: 50%;
+transform: translate(-50%, -50%)
+}
